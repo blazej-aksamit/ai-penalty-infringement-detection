@@ -1,0 +1,8 @@
+﻿path: data/yolo
+train: images/train
+val: images/val
+
+names:
+  0: goalkeeper
+  1: ball
+  2: goal_line
