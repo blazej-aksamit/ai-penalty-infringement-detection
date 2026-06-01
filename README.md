@@ -1,99 +1,151 @@
-# AI-Based Decision Support for Goalkeeper Goal-Line Infringements in Football Penalty Kicks
+# AI Penalty Infringement Detection
 
-Bachelor thesis project — a computer-vision pipeline that automatically determines whether a goalkeeper left the goal line before a penalty kick was taken (a foul under FIFA Laws of the Game).
+AI-based decision-support prototype for detecting goalkeeper goal-line infringements during football penalty kicks from single-camera broadcast footage.
 
----
+Developed as a Bachelor's Thesis at the University of Southern Denmark.
 
 ## Overview
 
-During a penalty kick the goalkeeper must remain on the goal line until the ball is kicked. Detecting violations manually is difficult even for match officials and VAR operators. This project builds a single-camera, fully-automated decision-support system that:
+This project investigates whether goalkeeper goal-line compliance during football penalties can be assessed automatically using standard broadcast video.
 
-1. Detects the kick moment using ball-motion analysis
-2. Localises the goal-line in the frame via homography
-3. Detects the goalkeeper with a fine-tuned YOLOv8 model
-4. Measures the goalkeeper's distance from the goal line in real-world units
-5. Outputs a three-way verdict: **Legal / Infringement / Uncertain**
+The system combines:
 
-A secondary module detects **encroachment** (outfield players entering the penalty area before the kick).
+- automatic kick-moment estimation through ball-motion analysis
+- YOLO-based goalkeeper and ball detection
+- Hough-transform-based goal-line localisation
+- geometric goalkeeper-line reasoning
+- explicit uncertainty-aware decision policies
 
----
+The system is designed as a decision-support tool, not a fully automated referee replacement.
 
-## Results
+It produces one of three outputs:
 
-Evaluated on 49 penalty clips (22 from SoccerNet + 27 original Video Project clips):
-
-| Policy | Coverage | Selective Accuracy | Precision | Recall | F1 |
-|---|---|---|---|---|---|
-| Relaxed | 0.980 (48/49) | 0.938 | 0.875 | 0.778 | 0.824 |
-| Conservative | 0.918 (45/49) | 0.933 | 0.833 | 0.714 | 0.769 |
-
-The **conservative policy** adds an uncertainty buffer around the ±2 px near-boundary zone, trading a small coverage drop for improved precision.
+- Legal
+- Potential infringement
+- Uncertain
 
 ---
 
-## Repository Structure
+## Final Adopted Pipeline
 
+1. Input penalty clip
+2. Automatic kick detection
+3. -1 frame temporal correction
+4. YOLO goalkeeper-ball detection
+5. Goal-line localisation using geometric filtering
+6. Goalkeeper-line classification
+7. Uncertainty-aware final decision
+
+---
+
+## Main Results
+
+### 22-clip benchmark
+
+**Relaxed policy**
+- Coverage: 0.955
+- Selective accuracy: 0.952
+- Infringement recall: 1.000
+
+**Conservative policy**
+- Coverage: 0.864
+- Selective accuracy: 0.947
+- Infringement recall: 1.000
+
+### Expanded 49-clip robustness evaluation
+
+**Relaxed policy**
+- Selective accuracy: 0.938
+- Coverage: 0.980
+
+**Conservative policy**
+- Selective accuracy: 0.933
+- Coverage: 0.918
+
+This demonstrates the practical trade-off between coverage and abstention under ambiguous geometric conditions.
+
+---
+
+## Installation
+
+```bash
+git clone https://github.com/blazej-aksamit/ai-penalty-infringement-detection.git
+cd ai-penalty-infringement-detection
+pip install -r requirements.txt
 ```
-src/                   Main pipeline source code
-  pipeline/            End-to-end pipeline orchestration
-  line_logic/          Goal-line localisation and distance measurement
-  kick_detection/      Ball-motion kick detector
-  yolo/                YOLOv8 training and inference wrappers
-  pose/                Pose estimation (experimental)
-  ml/                  Video-classifier experiments (R2+1D)
-  evaluation/          Batch runners and metric/report scripts
-  tools/               Utilities (video tools, batch runners)
-
-data/
-  annotations/         Manual bounding-box annotations (YOLO .txt labels), organised in batches
-  meta/                Ground-truth violation/encroachment labels and canonical metadata CSVs
-  yolo/                YOLO dataset config (dataset.yaml; source frames excluded)
-  yolo_gk_ball/        Goalkeeper/ball labels + dataset config (source frames excluded)
-
-models/                Fine-tuned detector weights (train4_best.pt, via Git LFS)
-requirements.txt       Python dependencies
-```
-
-> **Note on data & licensing.** Only our own annotations (YOLO `.txt` labels, CSV
-> metadata, dataset configs) are published here. The underlying penalty frames and
-> clips are **not** redistributed: SoccerNet footage is governed by its Non-Commercial
-> Research License, and the additional clips are YouTube-sourced. The extraction
-> pipeline is included so the datasets can be regenerated from the original sources.
 
 ---
 
 ## Quick Start
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the full pipeline on a single clip
 python src/pipeline/run_full_penalty_pipeline.py \
-    --clip path/to/penalty_clip.mp4 \
-    --auto-kick
+    --video-path path/to/penalty_clip.mp4 \
+    --auto-kick \
+    --kick-frame-adjust -1
 ```
 
 ---
 
-## Tech Stack
+## Technical Details
 
-- **Detection**: YOLOv8 (fine-tuned on custom goalkeeper/ball dataset, ~400 annotated frames)
-- **Geometry**: Automated Hough-transform goal-line detection with geometric plausibility filtering
-- **Kick detection**: Ball-motion (velocity-onset) detector with a -1 frame correction
-- **Uncertainty**: Selective-classification policy (relaxed vs conservative)
-- **Pose**: MediaPipe / YOLOv8-pose (investigated but rejected, not in final pipeline)
-- **Dataset**: SoccerNet penalty clips + additional YouTube-sourced clips
+### Object Detection
+
+YOLOv8n trained for:
+
+- goalkeeper
+- ball
+
+Final adopted detector: `runs/detect/train4/weights/best.pt`
+
+### Goal-Line Localisation
+
+The final adopted method uses:
+
+- Hough line transform
+- geometric plausibility filtering
+- local line candidate scoring
+
+No homography calibration is used.
+
+### Decision Logic
+
+The system measures goalkeeper position relative to the detected goal line using pixel-space geometric reasoning.
+
+Two uncertainty policies are available:
+
+**Relaxed policy** — prioritises coverage.
+
+**Conservative policy** — uses abstention on geometrically ambiguous near-boundary cases.
 
 ---
 
-## Key Files
+## Limitations
 
-| File | Description |
-|---|---|
-| `src/pipeline/run_full_penalty_pipeline.py` | End-to-end pipeline entry point |
-| `src/line_logic/hybrid_line_decision.py` | Goal-line decision logic |
-| `src/line_logic/uncertainty_policy.py` | Relaxed/conservative uncertainty policy |
-| `src/kick_detection/ball_motion_detector.py` | Automatic kick-moment detection |
-| `src/evaluation/batch_run_final_pipeline.py` | Batch evaluation + metrics runner |
-| `data/meta/keeper_violation_labels_final.csv` | Ground-truth violation labels |
+Performance depends strongly on:
+
+- kick-frame accuracy
+- goalkeeper lower-body visibility
+- goal-line visibility
+- broadcast perspective quality
+
+The system is optimised for professional broadcast footage and does not generalise reliably to amateur smartphone recordings without retraining.
+
+---
+
+## Thesis Information
+
+Bachelor's Thesis  
+University of Southern Denmark  
+Faculty of Engineering
+
+**Title:** AI-Based Decision Support for Goalkeeper Goal-Line Infringements in Football Penalty Kicks
+
+**Authors:**
+- Błażej Aksamit
+- Maciej Gawłowski
+
+**Supervisor:**
+- Rodrigo Furlan de Assis
+
+**Submission:** June 2026
