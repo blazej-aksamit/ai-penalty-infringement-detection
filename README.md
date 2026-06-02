@@ -81,6 +81,7 @@ pip install -r requirements.txt
 ```bash
 python src/pipeline/run_full_penalty_pipeline.py \
     --video-path path/to/penalty_clip.mp4 \
+    --model-path models/train4_best.pt \
     --auto-kick \
     --kick-frame-adjust -1
 ```
@@ -96,7 +97,7 @@ YOLOv8n trained for:
 - goalkeeper
 - ball
 
-Final adopted detector: `runs/detect/train4/weights/best.pt`
+Final adopted detector: `models/train4_best.pt`
 
 ### Goal-Line Localisation
 

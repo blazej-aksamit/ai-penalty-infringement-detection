@@ -91,7 +91,7 @@ def main():
     parser.add_argument("--kick-max-tracking-jump-px", type=float, default=180.0)
     parser.add_argument("--kick-disable-peak-fallback", action="store_true")
     parser.add_argument("--kick-frame-adjust", type=int, default=-1)
-    parser.add_argument("--model-path", default="runs/detect/train4/weights/best.pt")
+    parser.add_argument("--model-path", default="models/train4_best.pt")
     parser.add_argument("--pose-model-path", default=None)
     parser.add_argument("--player-model-path", default="yolo26n.pt")
     parser.add_argument("--conf", type=float, default=0.05)

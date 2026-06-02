@@ -1336,7 +1336,7 @@ def analyze_frame(
 def main():
     parser = argparse.ArgumentParser(description="Prototype player encroachment detection on the kick frame.")
     parser.add_argument("--video-path", required=True)
-    parser.add_argument("--kick-model-path", default="runs/detect/train4/weights/best.pt")
+    parser.add_argument("--kick-model-path", default="models/train4_best.pt")
     parser.add_argument("--player-model-path", default="yolo26n.pt")
     parser.add_argument("--frame-idx", type=int, default=None)
     parser.add_argument("--auto-kick", action="store_true")

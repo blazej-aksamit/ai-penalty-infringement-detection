@@ -558,7 +558,7 @@ def main():
     parser.add_argument("--kick-max-tracking-jump-px", type=float, default=180.0, help="Maximum allowed frame-to-frame ball jump during tracking")
     parser.add_argument("--kick-disable-peak-fallback", action="store_true", help="Disable fallback to the peak-velocity frame when no clear motion onset is found")
     parser.add_argument("--kick-frame-adjust", type=int, default=0, help="Additive frame adjustment applied after automatic kick detection (e.g. -1 or -2)")
-    parser.add_argument("--model-path", default="runs/detect/train4/weights/best.pt")
+    parser.add_argument("--model-path", default="models/train4_best.pt")
     parser.add_argument("--pose-model-path", default=None, help="Optional YOLO pose model used to refine the goalkeeper foot point")
     parser.add_argument("--pose-conf", type=float, default=0.25)
     parser.add_argument("--pose-imgsz", type=int, default=640)
