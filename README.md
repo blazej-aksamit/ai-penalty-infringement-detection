@@ -8,6 +8,12 @@ Developed as a Bachelor's Thesis at the University of Southern Denmark.
 
 This project investigates whether goalkeeper goal-line compliance during football penalties can be assessed automatically using standard broadcast video.
 
+
+
+https://github.com/user-attachments/assets/e7d1c99d-3eeb-4449-b75a-00b3859522e9
+
+
+
 The system combines:
 
 - automatic kick-moment estimation through ball-motion analysis
